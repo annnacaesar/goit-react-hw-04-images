@@ -1,7 +1,7 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { PropTypes } from 'prop-types';
-
+import { FcSearch } from 'react-icons/fc';
 import {
 	SearchForm,
 	SearchButton,
@@ -9,48 +9,46 @@ import {
 	SearchInput,
 } from './SearchbarForm.styled';
 
-class SearchbarForm extends Component {
-	state = {
-		searchQuery: '',
+const SearchbarForm = ({ onSubmit }) => {
+	const [searchQuery, setSearchQuery] = useState('');
+
+	const handleValueChange = event => {
+		setSearchQuery(event.currentTarget.value.toLowerCase());
 	};
 
-	handleValueChange = event => {
-		this.setState({ searchQuery: event.currentTarget.value.toLowerCase() });
-	};
-
-	handleSubmit = e => {
+	const handleSubmit = e => {
 		e.preventDefault();
 
-		if (this.state.searchQuery.trim() === '') {
+		if (searchQuery.trim() === '') {
 			toast.warn('Введіть слово для пошуку');
 			return;
 		}
-		this.props.onSubmit(this.state.searchQuery);
-		this.setState({ searchQuery: '' });
+		onSubmit(searchQuery);
+		setSearchQuery('');
 	};
-	render() {
-		return (
-			<SearchForm onSubmit={this.handleSubmit}>
-				<SearchButton type="submit">
-					<SearchLabel>Search</SearchLabel>
-				</SearchButton>
 
-				<SearchInput
-					name="searchQuery"
-					type="text"
-					autoComplete="off"
-					autoFocus
-					placeholder="Пошук зображень та фотографій"
-					value={this.state.searchQuery}
-					onChange={this.handleValueChange}
-				/>
-			</SearchForm>
-		);
-	}
-}
+	return (
+		<SearchForm onSubmit={handleSubmit}>
+			<SearchButton type="submit">
+				<FcSearch size="30" />
+				<SearchLabel>Search</SearchLabel>
+			</SearchButton>
+
+			<SearchInput
+				name="searchQuery"
+				type="text"
+				autoComplete="off"
+				autoFocus
+				placeholder="Пошук зображень та фотографій"
+				value={searchQuery}
+				onChange={handleValueChange}
+			/>
+		</SearchForm>
+	);
+};
 
 SearchbarForm.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
+	onSubmit: PropTypes.func.isRequired,
 };
 
 export default SearchbarForm;

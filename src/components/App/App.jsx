@@ -1,8 +1,8 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AppContainer } from './App.styled';
-import { Notify } from "../../components/ImageGallery/ImageGallery.styled";
+import { Notify } from '../../components/ImageGallery/ImageGallery.styled';
 import Searchbar from 'components/Searchbar';
 import ImageGallery from 'components/ImageGallery';
 import 'react-loader-spinner/dist/loader/css/react-spinner-loader.css';
@@ -12,105 +12,81 @@ import ImageErrorView from 'components/ImageErrorView';
 import Loader from 'components/Loader';
 import imagesAPI from '../../services/images-api';
 
-export class App extends Component {
-	state = {
-		images: [],
-		id: null,
-		searchQuery: '',
-		page: 1,
-		isLoading: false,
-		loadMore: false,
-		showModal: false,
-		isEmpty: false,
-		error: null,
-		per_page: 12,
-	
-	};
+export const App = () => {
+	const [images, setImages] = useState([]);
+	const [id, setId] = useState(null);
+	const [searchQuery, setSearchQuery] = useState('');
+	const [page, setPage] = useState(1);
+	const [isLoading, setIsLoading] = useState(false);
+	const [loadMore, setLoadMore] = useState(false);
+	const [showModal, setShowModal] = useState(false);
+	const [isEmpty, setIsEmpty] = useState(false);
+	const [error, setError] = useState(null);
+	const [perPage, setPerPage] = useState(12);
 
-	componentDidUpdate(_, prevState) {
-		const { searchQuery, page, } = this.state;
-		if (prevState.searchQuery !== searchQuery || prevState.page !== page) {
-			this.getPhotos(searchQuery, page);
+	useEffect(() => {
+		getPhotos(searchQuery, page);
+	}, [searchQuery, page]);
+
+	const getPhotos = async (query, page) => {
+		if (!query) return;
+		setIsLoading(true);
+		try {
+			const { hits, totalHits } = await imagesAPI(query, page);
+			if (hits.length === 0) {
+				setIsEmpty(true);
+			}
+			setImages(prevImages => [...prevImages, ...hits]);
+			setLoadMore(page < Math.ceil(totalHits / perPage));
+		} catch (error) {
+			setError(error.message);
+		} finally {
+			setIsLoading(false);
 		}
-	}
-
-	getPhotos = async (query, page) => {
-    if (!query) return;
-    this.setState({ isLoading: true });
-    try {
-      const {
-        hits,
-				totalHits,
-      } = await imagesAPI(query, page);
-      console.log(hits, totalHits);
-      if (hits.length === 0) {
-        this.setState({ isEmpty: true });
-      }
-      this.setState(prevState => ({
-        images: [...prevState.images, ...hits],
-        loadMore: this.state.page < Math.ceil(totalHits / this.state.per_page),
-      }));
-    } catch (error) {
-      this.setState({ error: error.message });
-    } finally {
-      this.setState({ isLoading: false });
-    }
-  };
-
-	handleFormSubmit = searchQuery => {
-		this.setState({
-			searchQuery: searchQuery,
-			page: 1,
-			loadMore: false,
-			images: [],
-			isEmpty: false,
-		});
 	};
 
-	loadMore = () => {
-		this.setState(prevState => ({ page: prevState.page + 1 }));
+	const handleFormSubmit = searchQuery => {
+		setSearchQuery(searchQuery);
+		setPage(1);
+		setLoadMore(false);
+		setImages([]);
+		setIsEmpty(false);
 	};
 
-
-	openModal = e => {
-		this.setState({
-			showModal: true,
-			id: e.currentTarget.dataset.id,
-		});
+	const onloadMore = () => {
+		setPage(prevPage => prevPage + 1);
 	};
 
-	closeModal = e => {
-		this.setState({
-			showModal: false,
-		});
+	const openModal = e => {
+		setShowModal(true);
+		setId(e.currentTarget.dataset.id);
 	};
 
-	render() {
-		const { searchQuery, page, loadMore, showModal, images, id, isLoading, isEmpty } =
-			this.state;
-		return (
-			<AppContainer>
-				<Searchbar onSubmit={this.handleFormSubmit} />
-				<ToastContainer position="top-center" autoClose={3000} />
-				
-				{isLoading && <Loader />}
-				{isEmpty && <ImageErrorView
-					message={`Немає картинки з ім'ям '${this.state.searchQuery}'`}
-				/>}
-				{searchQuery ? <ImageGallery
-					openModal={this.openModal}
-					images={images}
-				/> : <Notify >Введіть слово в пошуковий рядочок</Notify>}
-				
-				{loadMore && <Button onClick={this.loadMore} page={page} />}
-				{showModal && (
-					<Modal
-						images={images}
-						id={Number(id)}
-						onClose={this.closeModal}
-					/>
-				)}
-			</AppContainer>
-		);
-	}
-}
+	const closeModal = e => {
+		setShowModal(false);
+	};
+
+	return (
+		<AppContainer>
+			<Searchbar onSubmit={handleFormSubmit} />
+			<ToastContainer position="top-center" autoClose={3000} />
+
+			{isLoading && <Loader />}
+			{isEmpty && (
+				<ImageErrorView
+					message={`Немає картинки з ім'ям '${searchQuery}'`}
+				/>
+			)}
+			{searchQuery ? (
+				<ImageGallery openModal={openModal} images={images} />
+			) : (
+				<Notify>Введіть слово в пошуковий рядочок</Notify>
+			)}
+
+			{loadMore && <Button onClick={onloadMore} page={page} />}
+			{showModal && (
+				<Modal images={images} id={Number(id)} onClose={closeModal} />
+			)}
+		</AppContainer>
+	);
+};
