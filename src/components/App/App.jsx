@@ -22,7 +22,7 @@ export const App = () => {
 	const [showModal, setShowModal] = useState(false);
 	const [isEmpty, setIsEmpty] = useState(false);
 	const [error, setError] = useState(null);
-	const [perPage, setPerPage] = useState(12);
+	const perPage = 12;
 
 	useEffect(() => {
 		getPhotos(searchQuery, page);
@@ -53,17 +53,9 @@ export const App = () => {
 		setIsEmpty(false);
 	};
 
-	const onloadMore = () => {
-		setPage(prevPage => prevPage + 1);
-	};
-
 	const openModal = e => {
 		setShowModal(true);
 		setId(e.currentTarget.dataset.id);
-	};
-
-	const closeModal = e => {
-		setShowModal(false);
 	};
 
 	return (
@@ -72,6 +64,9 @@ export const App = () => {
 			<ToastContainer position="top-center" autoClose={3000} />
 
 			{isLoading && <Loader />}
+			{error && <ImageErrorView
+					message={error}
+				/>}
 			{isEmpty && (
 				<ImageErrorView
 					message={`Немає картинки з ім'ям '${searchQuery}'`}
@@ -83,9 +78,9 @@ export const App = () => {
 				<Notify>Введіть слово в пошуковий рядочок</Notify>
 			)}
 
-			{loadMore && <Button onClick={onloadMore} page={page} />}
+			{loadMore && <Button onClick={() => setPage(page => page + 1)} page={page} />}
 			{showModal && (
-				<Modal images={images} id={Number(id)} onClose={closeModal} />
+				<Modal images={images} id={Number(id)} onClose={e => setShowModal(false)} />
 			)}
 		</AppContainer>
 	);
