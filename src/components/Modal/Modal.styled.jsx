@@ -11,6 +11,7 @@ position: fixed;
   align-items: center;
   background-color: rgba(0, 0, 0, 0.8);
   z-index: 1200;
+  
 `
 export const ModalStyle = styled.div`
 max-width: calc(100vw - 48px);
