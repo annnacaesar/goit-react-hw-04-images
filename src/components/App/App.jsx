@@ -13,6 +13,7 @@ import Loader from 'components/Loader';
 import imagesAPI from '../../services/images-api';
 
 export const App = () => {
+	
 	const [images, setImages] = useState([]);
 	const [id, setId] = useState(null);
 	const [searchQuery, setSearchQuery] = useState('');
